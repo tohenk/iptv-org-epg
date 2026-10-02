@@ -3,13 +3,10 @@ const path = require('path')
 const crypto = require('crypto')
 const dayjs = require('dayjs')
 const utc = require('dayjs/plugin/utc')
-const timezone = require('dayjs/plugin/timezone')
 const doFetch = require('@ntlab/sfetch')
 
 dayjs.extend(utc)
-dayjs.extend(timezone)
 
-const tz = 'Asia/Jakarta'
 const UDID = crypto.randomUUID()
 const UUID = crypto.randomUUID()
 const headers = {
@@ -19,7 +16,7 @@ const headers = {
   'webplatform': '878a6db06e0cd079b3b02408d246801d217c018f',
   'x-data-centre': btoa([UDID, UUID].join('|')),
   'x-localization': 'EN',
-  'x-maxstream-version': '3.2.6'
+  'x-maxstream-version': '3.4.1'
 }
 
 module.exports = {
@@ -45,7 +42,7 @@ module.exports = {
         schedules.push(...item.metadata)
       })
       const cdate = date.startOf('d')
-      const f = (dt, e) => (dt = dayjs.tz(dt, tz), dt.isSame(cdate, 'd') && (e ? dt > cdate : true))
+      const f = (dt, e) => (dt = dayjs.utc(dt), dt.isSame(cdate, 'd') && (e ? dt > cdate : true))
       schedules
         .filter(
           entry => entry.parentId === channel.site_id && (f(entry.startTime) || f(entry.endTime, true))
@@ -57,8 +54,8 @@ module.exports = {
           programs.push({
             title: entry.tvProgram,
             description: entry.description,
-            start: dayjs.tz(entry.startTime, tz),
-            stop: dayjs.tz(entry.endTime, tz),
+            start: dayjs.utc(entry.startTime),
+            stop: dayjs.utc(entry.endTime),
             season: season || session2 ? parseInt(season || session2) : null,
             episode: episode ? parseInt(episode) : null,
             image: entry.thumbnail_url
@@ -96,7 +93,7 @@ module.exports = {
           .forEach(item => {
             // only queue new channel
             if (knownChannels[item.id] === undefined) {
-              queue.push(f(item))
+              queues.push(f(item))
             }
           })
       }
